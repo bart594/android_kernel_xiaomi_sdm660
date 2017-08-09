@@ -2738,8 +2738,9 @@ static void sram_dump_work(struct work_struct *work)
 	fg_dbg(chip, FG_STATUS, "SRAM Dump done at %lld.%d\n",
 		quotient, remainder);
 resched:
-	schedule_delayed_work(&chip->sram_dump_work,
-			msecs_to_jiffies(fg_sram_dump_period_ms));
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->sram_dump_work,
+		msecs_to_jiffies(fg_sram_dump_period_ms));
 }
 
 static int fg_sram_dump_sysfs(const char *val, const struct kernel_param *kp)
@@ -3716,7 +3717,8 @@ static irqreturn_t fg_batt_missing_irq_handler(int irq, void *data)
 	}
 
 	clear_battery_profile(chip);
-	schedule_delayed_work(&chip->profile_load_work, 0);
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->profile_load_work, 0);
 
 	if (chip->fg_psy)
 		power_supply_changed(chip->fg_psy);
@@ -4739,8 +4741,10 @@ static int fg_gen3_probe(struct platform_device *pdev)
 	}
 
 	device_init_wakeup(chip->dev, true);
-	schedule_delayed_work(&chip->profile_load_work, 0);
-	schedule_delayed_work(&chip->soc_work, 0);
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->soc_work, 0);
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->profile_load_work, 0);
 
 	pr_debug("FG GEN3 driver probed successfully\n");
 	return 0;
@@ -4780,9 +4784,6 @@ static int fg_gen3_resume(struct device *dev)
 	fg_circ_buf_clr(&chip->ibatt_circ_buf);
 	fg_circ_buf_clr(&chip->vbatt_circ_buf);
 	schedule_delayed_work(&chip->batt_avg_work, 0);
-	if (fg_sram_dump)
-		schedule_delayed_work(&chip->sram_dump_work,
-				msecs_to_jiffies(fg_sram_dump_period_ms));
 
 	if (!work_pending(&chip->status_change_work)) {
 		pm_stay_awake(chip->dev);
@@ -4793,6 +4794,12 @@ static int fg_gen3_resume(struct device *dev)
 	chip->suspended = false;
 	spin_unlock(&chip->suspend_lock);
 
+	queue_delayed_work(system_power_efficient_wq,
+		&chip->ttf_work, 0);
+	if (fg_sram_dump)
+		queue_delayed_work(system_power_efficient_wq,
+			&chip->sram_dump_work,
+			msecs_to_jiffies(fg_sram_dump_period_ms));
 	return 0;
 }
 
