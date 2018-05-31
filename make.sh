@@ -59,6 +59,8 @@ function copyAndSetPerms {
 }
 export ARCH=arm64
 export CROSS_COMPILE=/home/dusan/kernel/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+export KBUILD_BUILD_USER="uvera"
+export KBUILD_BUILD_HOST="jason"
 export HOME=/home/dusan
 make kangeroo_defconfig
 make
