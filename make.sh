@@ -60,7 +60,7 @@ function copyAndSetPerms {
 export ARCH=arm64
 export CROSS_COMPILE=/home/dusan/kernel/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 export HOME=/home/dusan
-make lineageos_jason_defconfig
+make kangeroo_defconfig
 make
 jStuff
 deviceName="Jason"
