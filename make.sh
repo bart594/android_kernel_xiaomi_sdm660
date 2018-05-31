@@ -23,12 +23,12 @@ function zImageReport {
 
 
 function cleanup {	
-	if [ -e ak2/zImage ]; then
+	if [ -e ../ak2/zImage ]; then
 		printf "Deleting alredy present zImage...\n"
 		rm -rf ${HOME}/kernel/ak2/zImage
 	fi
 
-	if [ -e ak2/*.zip ]; then
+	if [ -e ../ak2/*.zip ]; then
 		printf "Deleting alredy present zip...\n"
 		rm -rf ${HOME}/kernel/ak2/*.zip
 	fi
