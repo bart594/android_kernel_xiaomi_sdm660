@@ -3527,3 +3527,4 @@ static inline unsigned long rlimit_max(unsigned int limit)
 int do_stune_boost(char *st_name, int boost);
 int reset_stune_boost(char *st_name);
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
+#endif
