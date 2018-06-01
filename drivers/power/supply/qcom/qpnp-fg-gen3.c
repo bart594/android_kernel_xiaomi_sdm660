@@ -4794,8 +4794,6 @@ static int fg_gen3_resume(struct device *dev)
 	chip->suspended = false;
 	spin_unlock(&chip->suspend_lock);
 
-	queue_delayed_work(system_power_efficient_wq,
-		&chip->ttf_work, 0);
 	if (fg_sram_dump)
 		queue_delayed_work(system_power_efficient_wq,
 			&chip->sram_dump_work,
