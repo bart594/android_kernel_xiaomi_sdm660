@@ -57,13 +57,13 @@ function copyAndSetPerms {
 	cp ${HOME}/kernel/ak2/"${kernelName}".zip ../
 	chmod 0777 ../"${kernelName}".zip
 }
+export HOME=/home/dusan
 export ARCH=arm64
-export CROSS_COMPILE=/home/dusan/kernel/aarch64-linaro-linux-android/bin/aarch64-linaro-linux-android-
+export CROSS_COMPILE=${HOME}/kernel/aarch64-linaro-linux-android/bin/aarch64-linaro-linux-android-
 export KBUILD_BUILD_USER="uvera"
 export KBUILD_BUILD_HOST="jason"
-export HOME=/home/dusan
 make kangeroo_defconfig
-make
+make -j16
 jStuff
 deviceName="Jason"
 
