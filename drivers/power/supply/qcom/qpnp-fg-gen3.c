@@ -2159,7 +2159,7 @@ static void fg_batt_avg_update(struct fg_chip *chip)
 
 	if (chip->charge_status == POWER_SUPPLY_STATUS_CHARGING ||
 			chip->charge_status == POWER_SUPPLY_STATUS_DISCHARGING)
-		schedule_delayed_work(&chip->batt_avg_work,
+		queue_delayed_work(system_power_efficient_wq,&chip->batt_avg_work,
 							msecs_to_jiffies(2000));
 }
 
@@ -2767,7 +2767,7 @@ static int fg_sram_dump_sysfs(const char *val, const struct kernel_param *kp)
 
 	chip = power_supply_get_drvdata(bms_psy);
 	if (fg_sram_dump)
-		schedule_delayed_work(&chip->sram_dump_work,
+		queue_delayed_work(system_power_efficient_wq,&chip->sram_dump_work,
 				msecs_to_jiffies(fg_sram_dump_period_ms));
 	else
 		cancel_delayed_work_sync(&chip->sram_dump_work);
@@ -2848,7 +2848,7 @@ static void batt_avg_work(struct work_struct *work)
 
 reschedule:
 	mutex_unlock(&chip->batt_avg_lock);
-	schedule_delayed_work(&chip->batt_avg_work,
+	queue_delayed_work(system_power_efficient_wq,&chip->batt_avg_work,
 			      msecs_to_jiffies(BATT_AVG_POLL_PERIOD_MS));
 }
 
@@ -4544,7 +4544,7 @@ static void soc_work_fn(struct work_struct *work)
 	pr_info("adjust_soc: 019: %02x, %02x, %02x, %02x\n", buf_auto[0], buf_auto[1], buf_auto[2], buf_auto[3]);
 	pr_info("adjust_soc: 079: %02x, %02x, %02x, %02x\n", buf_profile[0], buf_profile[1], buf_profile[2], buf_profile[3]);
 
-	schedule_delayed_work(
+	queue_delayed_work(system_power_efficient_wq,
 		&chip->soc_work,
 		msecs_to_jiffies(SOC_WORK_MS));
 
@@ -4783,7 +4783,7 @@ static int fg_gen3_resume(struct device *dev)
 
 	fg_circ_buf_clr(&chip->ibatt_circ_buf);
 	fg_circ_buf_clr(&chip->vbatt_circ_buf);
-	schedule_delayed_work(&chip->batt_avg_work, 0);
+	queue_delayed_work(system_power_efficient_wq,&chip->batt_avg_work, 0);
 
 	if (!work_pending(&chip->status_change_work)) {
 		pm_stay_awake(chip->dev);
