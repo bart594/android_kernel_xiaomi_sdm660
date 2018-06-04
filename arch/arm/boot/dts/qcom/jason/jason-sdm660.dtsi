@@ -15,12 +15,12 @@
 #include "jason-camera-sensor-mtp.dtsi"
 
 &pm660_charger {
-	qcom,usb-icl-ua = <2700000>;
-	qcom,fcc-max-ua = <2700000>;
+	qcom,usb-icl-ua = <3000000>;
+	qcom,fcc-max-ua = <3300000>;
 	qcom,fv-max-uv = <4400000>;
 	qcom,warm-current-comp-ua = <1600000>;
-	qcom,cool-current-comp-ua = <2200000>;
-	qcom,critical-cool-current-comp-ua = <2500000>;
+	qcom,cool-current-comp-ua = <2300000>;
+	qcom,critical-cool-current-comp-ua = <2975000>;
 	qcom,thermal-mitigation
 				= <3000000 2000000 1500000 1200000 1000000 800000 600000 500000>;
 	qcom,thermal-mitigation-dcp
