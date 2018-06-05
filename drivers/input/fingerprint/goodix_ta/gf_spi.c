@@ -686,20 +686,6 @@ static const struct file_operations gf_fops = {
 #endif
 };
 
-static void set_fingerprintd_nicer(int nice)
-{
-	struct task_struct *p;
-
-	read_lock(&tasklist_lock);
-	for_each_process(p) {
-		if (!memcmp(p->comm, "fingerprintd", 13)) {
-			set_user_nice(p, nice);
-			break;
-		}
-	}
-	read_unlock(&tasklist_lock);
-}
-
 static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 		unsigned long val, void *data)
 {
@@ -733,7 +719,6 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 				}
 #endif
 			}
-			set_fingerprintd_nicer(-1);
 			break;
 		case FB_BLANK_UNBLANK:
 		case FB_BLANK_NORMAL:
@@ -741,7 +726,6 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 				gf_dev->fb_black = 0;
 				/* Unconditionally enable IRQ when screen turns on */
 				gf_enable_irq(gf_dev);
-				
 #if defined(GF_NETLINK_ENABLE)
 				temp[0] = GF_NET_EVENT_FB_UNBLACK;
 				sendnlmsg(temp);
@@ -751,7 +735,6 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 				}
 #endif
 			}
-			set_fingerprintd_nicer(0);
 			break;
 		default:
 			pr_debug("%s defalut\n", __func__);
