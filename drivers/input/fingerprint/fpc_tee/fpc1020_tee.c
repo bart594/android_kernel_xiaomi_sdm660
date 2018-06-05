@@ -437,7 +437,7 @@ static ssize_t wakeup_enable_set(struct device *dev,
 	ssize_t ret = count;
 
 	mutex_lock(&fpc1020->lock);
-/*
+	/*
 	if (!strncmp(buf, "enable", strlen("enable")))
 		atomic_set(&fpc1020->wakeup_enabled, 1);
 	else if (!strncmp(buf, "disable", strlen("disable")))
@@ -622,6 +622,20 @@ static int fpc1020_request_named_gpio(struct fpc1020_data *fpc1020,
 	return 0;
 }
 
+static void set_fingerprintd_nice(int nice)
+{
+	struct task_struct *p;
+
+	read_lock(&tasklist_lock);
+	for_each_process(p) {
+		if (!memcmp(p->comm, "fingerprintd", 13)) {
+			set_user_nice(p, nice);
+			break;
+		}
+	}
+	read_unlock(&tasklist_lock);
+}
+
 static int fpc_fb_notif_callback(struct notifier_block *nb,
 		unsigned long val, void *data)
 {
@@ -654,6 +668,7 @@ static int fpc_fb_notif_callback(struct notifier_block *nb,
 				config_irq(fpc1020, false);
 				mutex_unlock(&fpc1020->lock);
 			}
+			set_fingerprintd_nice(-1);
 			break;
 		case FB_BLANK_UNBLANK:
 		case FB_BLANK_NORMAL:
@@ -662,6 +677,7 @@ static int fpc_fb_notif_callback(struct notifier_block *nb,
 			mutex_lock(&fpc1020->lock);
 			config_irq(fpc1020, true);
 			mutex_unlock(&fpc1020->lock);
+			set_fingerprintd_nice(0);
 			break;
 		default:
 			pr_debug("%s defalut\n", __func__);
