@@ -42,6 +42,10 @@
 #include <linux/pm_qos.h>
 #include <linux/cpufreq.h>
 #include <linux/wakelock.h>
+
+#include <linux/input.h>
+#include <linux/state_notifier.h>
+
 #include <linux/mdss_io_util.h>
 
 #include "gf_spi.h"
@@ -69,6 +73,8 @@
 #define	CLASS_NAME		    "goodix_fp"
 
 #define N_SPI_MINORS		32	/* ... up to 256 */
+
+#define KEY_FINGERPRINT 0x2ee
 static int SPIDEV_MAJOR;
 
 static DECLARE_BITMAP(minors, N_SPI_MINORS);
@@ -498,6 +504,36 @@ static void notification_work(struct work_struct *work)
 	pr_debug("unblank\n");
 }
 
+static int gf_dev_input_init(struct gf_dev *gf_dev)
+{
+	int ret;
+
+	gf_dev->input_dev = input_allocate_device();
+	if (!gf_dev->input_dev) {
+		pr_err("fingerprint input boost allocation is fucked - 1 star\n");
+		ret = -ENOMEM;
+		goto exit;
+	}
+
+	gf_dev->input_dev->name = "goodix_fp";
+	gf_dev->input_dev->evbit[0] = BIT(EV_KEY);
+
+	set_bit(KEY_FINGERPRINT, gf_dev->input_dev->keybit);
+	ret = input_register_device(gf_dev->input_dev);
+	if (ret) {
+		pr_err("fingerprint boost input registration is fucked - fixpls\n");
+		goto err_free_dev;
+	}
+
+	return 0;
+
+err_free_dev:
+	input_free_device(gf_dev->input_dev);
+exit:
+	return ret;
+}
+
+
 static irqreturn_t gf_irq(int irq, void *handle)
 {
 	struct gf_dev *gf_dev = &gf;
@@ -523,6 +559,12 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	if (gf_dev->async)
 		kill_fasync(&gf_dev->async, SIGIO, POLL_IN);
 #endif
+	if (gf_dev->state_suspended) {
+		input_report_key(gf_dev->input_dev, KEY_FINGERPRINT, 1);
+		input_sync(gf_dev->input_dev);
+		input_report_key(gf_dev->input_dev, KEY_FINGERPRINT, 0);
+		input_sync(gf_dev->input_dev);
+	}
 
 	return IRQ_HANDLED;
 }
@@ -832,6 +874,10 @@ static int gf_probe(struct platform_device *pdev)
 			pr_err("failed to register input device\n");
 			goto error_input;
 		}
+		status = gf_dev_input_init(gf_dev);
+		if (status) {
+		goto error_input;
+		}
 	}
 #ifdef AP_CONTROL_CLK
 	pr_debug("Get the clk resource.\n");
@@ -900,6 +946,9 @@ static int gf_remove(struct platform_device *pdev)
 #endif
 {
 	struct gf_dev *gf_dev = &gf;
+	struct input_dev *input_dev;
+	if (gf_dev->input_dev != NULL)
+	input_free_device(gf_dev->input_dev);	
 
 	wake_lock_destroy(&fp_wakelock);
 	/* make sure ops on existing fds can abort cleanly */
